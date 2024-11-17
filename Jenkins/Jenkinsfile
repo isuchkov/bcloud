@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    environment {
+        ACR_NAME = "<your_acr_name>"
+        IMAGE_NAME = "hello-world"
+        ACR_URL = "${ACR_NAME}.azurecr.io"
+        KUBECONFIG = credentials('kubeconfig')  // Use the Jenkins credential to access AKS
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm  // Checkout the code from the repository
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${ACR_URL}/${IMAGE_NAME}:latest")  // Build the Docker image
+                }
+            }
+        }
+
+        stage('Login to ACR') {
+            steps {
+                script {
+                    // Login to ACR using Docker
+                    sh "docker login ${ACR_URL} -u ${ACR_NAME} -p ${ACR_PASSWORD}"  // ACR_PASSWORD should be stored as Jenkins secret
+                }
+            }
+        }
+
+        stage('Push Docker Image to ACR') {
+            steps {
+                script {
+                    // Push the Docker image to ACR
+                    sh "docker push ${ACR_URL}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Deploy to AKS') {
+            steps {
+                script {
+                    // Use kubectl to deploy the app to AKS
+                    sh "kubectl apply -f k8s/deployment.yaml"  // Deploy the application to AKS
+                    sh "kubectl rollout status deployment/hello-world-app"  // Ensure the deployment is successful
+                }
+            }
+        }
+
+        stage('Expose Application') {
+            steps {
+                script {
+                    // Expose the application via an Ingress (if not already done)
+                    sh "kubectl apply -f k8s/ingress.yaml"  // Apply the Ingress manifest to expose the application
+                    sh "kubectl get ingress"  // Verify the ingress configuration
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Cleaning up'
+            sh 'docker system prune -f'  // Clean up unused Docker images and containers
+        }
+    }
+}
