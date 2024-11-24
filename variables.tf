@@ -40,3 +40,18 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
+variable "key_vault_name" {
+  default = "Ivan-Candidate-vault"
+}
+
+variable "acr_name" {
+  description = "The Azure registry name."
+  type        = string
+  default     = "ivancandidateacr"
+}
+
+variable "aks_name" {
+  description = "The AKS name."
+  type        = string
+  default     = "ivancandidateaks"
+}

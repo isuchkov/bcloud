@@ -1,1 +1,5 @@
 .terraform*
+azure.key
+azure.rsa
+id_rsa
+

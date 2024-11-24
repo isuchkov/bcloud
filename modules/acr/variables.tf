@@ -1,7 +1,7 @@
 variable "acr_name" {
   description = "The Azure registry name."
   type        = string
-  default     = "candidate"
+  default     = "ivancandidateacr"
 }
 
 variable "location" {

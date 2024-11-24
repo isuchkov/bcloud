@@ -17,7 +17,8 @@ resource "azurerm_public_ip" "vm_public_ip" {
   name                         = "${var.vm_name}-public-ip"
   location                     = var.location
   resource_group_name          = var.resource_group_name
-  allocation_method            = "Dynamic"
+  allocation_method            = "Static"
+  sku                          = "Standard"
   idle_timeout_in_minutes      = 4
   domain_name_label            = "jenkins-server-${var.vm_name}"
 
@@ -30,7 +31,7 @@ resource "azurerm_network_security_group" "nsg" {
   location            = var.location
   resource_group_name = var.resource_group_name
 # Note that this rule will allow all external connections from internet to SSH port
-
+# allow ssh
   security_rule {
     name                       = "SSH"
     priority                   = 200
@@ -40,6 +41,18 @@ resource "azurerm_network_security_group" "nsg" {
     source_port_range          = "*"
     destination_port_range     = "22"
     source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+# allow 8080
+  security_rule {
+    name                       = "http"
+    priority                   = 300
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "128.127.112.136"
     destination_address_prefix = "*"
   }
 }
@@ -77,7 +90,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
+    offer     = "0001-com-ubuntu-server-jammy"
     sku       = "22_04-lts"
     version   = "latest"
   }
