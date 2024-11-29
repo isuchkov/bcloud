@@ -42,45 +42,45 @@ resource "azurerm_dns_zone" "aks_dns_zone" {
   resource_group_name = var.resource_group_name
 }
 
-# User Assigned Identity for ExternalDNS
-resource "azurerm_user_assigned_identity" "aks_dns_identity" {
-  name                = "aks-dns-identity"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-}
-
-# Federated Identity for ExternalDNS
-resource "azurerm_federated_identity_credential" "default" {
-  name                = var.ingress_namespace
-  resource_group_name = var.resource_group_name
-  audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.aks_cluster_oidc_issuer_url
-  parent_id           = azurerm_user_assigned_identity.aks_dns_identity.id
-  subject             = "system:serviceaccount:${var.ingress_namespace}:external-dns"
-}
-
-# Role Assignments for Azure DNS Zone and Resource Group
-resource "azurerm_role_assignment" "aks_dns_role_assignment" {
-  scope                = azurerm_dns_zone.aks_dns_zone.id
-  role_definition_name = "DNS Zone Contributor"
-  principal_id         = azurerm_user_assigned_identity.aks_dns_identity.principal_id
-}
-
-resource "azurerm_role_assignment" "aks_rg_reader_role_assignment" {
-  scope                = data.azurerm_resource_group.rg.id
-  role_definition_name = "Reader"
-  principal_id         = azurerm_user_assigned_identity.aks_dns_identity.principal_id
-}
-
+# # User Assigned Identity for ExternalDNS
+# resource "azurerm_user_assigned_identity" "aks_dns_identity" {
+#   name                = "aks-dns-identity"
+#   resource_group_name = var.resource_group_name
+#   location            = var.location
+# }
+#
+# # Federated Identity for ExternalDNS
+# resource "azurerm_federated_identity_credential" "default" {
+#   name                = var.ingress_namespace
+#   resource_group_name = var.resource_group_name
+#   audience            = ["api://AzureADTokenExchange"]
+#   issuer              = var.aks_cluster_oidc_issuer_url
+#   parent_id           = azurerm_user_assigned_identity.aks_dns_identity.id
+#   subject             = "system:serviceaccount:${var.ingress_namespace}:external-dns"
+# }
+#
+# # Role Assignments for Azure DNS Zone and Resource Group
+# resource "azurerm_role_assignment" "aks_dns_role_assignment" {
+#   scope                = azurerm_dns_zone.aks_dns_zone.id
+#   role_definition_name = "DNS Zone Contributor"
+#   principal_id         = azurerm_user_assigned_identity.aks_dns_identity.principal_id
+# }
+#
+# resource "azurerm_role_assignment" "aks_rg_reader_role_assignment" {
+#   scope                = data.azurerm_resource_group.rg.id
+#   role_definition_name = "Reader"
+#   principal_id         = azurerm_user_assigned_identity.aks_dns_identity.principal_id
+# }
+#
 # AzureAD Application for Service Principal
 resource "azuread_application" "external_dns_app" {
   display_name = "spn-external-dns-aks"
 }
-
-resource "azuread_service_principal" "external_dns_sp" {
-  client_id = azuread_application.external_dns_app.client_id
-}
-
-resource "azuread_service_principal_password" "external_dns_sp_password" {
-  service_principal_id = azuread_service_principal.external_dns_sp.id
-}
+#
+# resource "azuread_service_principal" "external_dns_sp" {
+#   client_id = azuread_application.external_dns_app.client_id
+# }
+#
+# resource "azuread_service_principal_password" "external_dns_sp_password" {
+#   service_principal_id = azuread_service_principal.external_dns_sp.id
+# }
